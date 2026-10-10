@@ -45,6 +45,18 @@ The app imports `src/bookmarklet/dist/bookmarklet.js?raw`, which is a build arti
 - OSM tags BIU buildings either as name "507 - ..." or as `building=university` + `addr:housenumber`. Building 505 is not in OSM.
 - Building coordinates come from two independent sources, which agree to within a few meters where both exist: OSM (`npm run update:buildings`), plus Google Maps place lookups for buildings OSM lacks, stored as `"source": "manual"`.
 
+## Marketing video
+
+- `marketing/video/reel.html` is a 9:16 motion-graphics Reel (script: `docs/VIDEO_SCRIPT.md`). It uses the MIT `motion.js` engine from Barty-Bart/motion-graphics (`marketing/video/engine/`, kept unmodified). Every style is a pure function of `t` in `seek(t)`: no CSS transitions or timers.
+- Sound cues are pushed with `cue(t, type)` into `window.SFX`. `render.mjs` synthesises them (pop / tick / tap / whoosh / chime + an ambient pad), so audio stays in sync when timings change.
+- Commands:
+  - `npm run video`: 4-subframe motion blur, ~10 minutes.
+  - `npm run video:fast`: no motion blur.
+  - `node marketing/video/render.mjs stills 1.0 7.8`: review frames.
+  - Output goes to `marketing/video/out/` (gitignored). Uses `playwright` + `ffmpeg-static`, so no system ffmpeg is needed.
+- Mixed Hebrew + Latin text: use the Hebrew maqaf `־` (U+05BE, an RTL character) instead of `-` before a Latin word ("מ־Inbar", "ב־Waze"). Otherwise the bidi algorithm flips the word to the wrong side.
+- WhatsApp exports used for research (`WhatsApp Chat*/`) are gitignored. `scripts/analyze-chat.py` prints counts and examples without sender names; quote only anonymised text in marketing.
+
 ## Privacy rules (from the developer)
 
 The repo is public. The only personal details allowed in it are the developer's public credit: **Idan Vaknin, idan.vaknin1@live.biu.ac.il** (in `src/app/config.ts`). No real student timetables (the fixtures in `tests/fixtures/` are synthetic), no Inbar screenshots or snapshots (`.playwright-mcp/` is gitignored), and no private email in commits. This repo's git config is set to the public identity.

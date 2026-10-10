@@ -1,0 +1,401 @@
+<!doctype html>
+<!--
+  "איפה הכיתה?" — 9:16 motion-graphics reel for BIU Auto-Pilot.
+  Every style is a pure function of t inside seek(t) (motion-broll engine rules): no CSS transitions,
+  no timers. Open directly to preview (loops); render with `npm run video`.
+  Script and timing: docs/VIDEO_SCRIPT.md. Sound cues are collected in window.SFX for the renderer.
+-->
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<title>BIU Auto-Pilot reel</title>
+<style>
+  @font-face { font-family: "Rubik"; font-weight: 400; src: url("../../node_modules/@fontsource/rubik/files/rubik-hebrew-400-normal.woff2") format("woff2"); unicode-range: U+0590-05FF, U+200C-2010, U+20AA, U+25CC, U+FB1D-FB4F; }
+  @font-face { font-family: "Rubik"; font-weight: 500; src: url("../../node_modules/@fontsource/rubik/files/rubik-hebrew-500-normal.woff2") format("woff2"); unicode-range: U+0590-05FF, U+200C-2010, U+20AA, U+25CC, U+FB1D-FB4F; }
+  @font-face { font-family: "Rubik"; font-weight: 700; src: url("../../node_modules/@fontsource/rubik/files/rubik-hebrew-700-normal.woff2") format("woff2"); unicode-range: U+0590-05FF, U+200C-2010, U+20AA, U+25CC, U+FB1D-FB4F; }
+  @font-face { font-family: "Rubik"; font-weight: 400; src: url("../../node_modules/@fontsource/rubik/files/rubik-latin-400-normal.woff2") format("woff2"); }
+  @font-face { font-family: "Rubik"; font-weight: 500; src: url("../../node_modules/@fontsource/rubik/files/rubik-latin-500-normal.woff2") format("woff2"); }
+  @font-face { font-family: "Rubik"; font-weight: 700; src: url("../../node_modules/@fontsource/rubik/files/rubik-latin-700-normal.woff2") format("woff2"); }
+
+  html, body { margin: 0; background: #050f0c; overflow: hidden; }
+  body.preview #wrap { position: fixed; left: 50%; top: 50%; transform-origin: 50% 50%; }
+  #wrap { position: relative; width: 1080px; height: 1920px; }
+  #stage { position: relative; width: 1080px; height: 1920px; overflow: hidden; font-family: "Rubik", system-ui, sans-serif;
+           color: #fff; -webkit-font-smoothing: antialiased; background: #061511; }
+
+  /* ---------- background: drifting colour fields the glass refracts ---------- */
+  #bg { position: absolute; inset: -400px; }
+  .blob { position: absolute; width: 1100px; height: 1100px; border-radius: 50%; left: 0; top: 0; }
+  #b1 { background: radial-gradient(closest-side, rgba(24, 160, 128, .85), rgba(24, 160, 128, 0)); }
+  #b2 { background: radial-gradient(closest-side, rgba(51, 204, 255, .65), rgba(51, 204, 255, 0)); }
+  #b3 { background: radial-gradient(closest-side, rgba(255, 178, 102, .45), rgba(255, 178, 102, 0)); }
+  #b4 { background: radial-gradient(closest-side, rgba(120, 90, 255, .35), rgba(120, 90, 255, 0)); }
+  #grid { position: absolute; inset: 0; opacity: .07;
+          background-image: linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px);
+          background-size: 120px 120px; }
+
+  /* ---------- camera ---------- */
+  #world { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
+  .a { position: absolute; left: 0; top: 0; }
+
+  /* ---------- Liquid Glass ---------- */
+  .glass { position: relative; background: rgba(255, 255, 255, .11); border-radius: 44px;
+           -webkit-backdrop-filter: blur(30px) saturate(175%); backdrop-filter: blur(30px) saturate(175%);
+           box-shadow: inset 0 1.5px 0 rgba(255, 255, 255, .5), inset 0 -1px 0 rgba(255, 255, 255, .06),
+                       0 40px 80px -30px rgba(0, 0, 0, .55), 0 2px 6px rgba(0, 0, 0, .12); }
+  .glass::before { content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1.6px; pointer-events: none;
+                   background: linear-gradient(140deg, rgba(255,255,255,.8), rgba(255,255,255,.1) 32%, rgba(255,255,255,.03) 62%, rgba(255,255,255,.5));
+                   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; }
+  .glass::after { content: ""; position: absolute; left: 8%; right: 8%; top: 0; height: 46%; border-radius: inherit; pointer-events: none;
+                  background: linear-gradient(180deg, rgba(255,255,255,.16), rgba(255,255,255,0)); }
+
+  /* ---------- scene 1: chat ---------- */
+  .row { width: 820px; display: flex; }
+  .row.r { justify-content: flex-start; }  /* rtl: flex-start = right */
+  .row.l { justify-content: flex-end; }
+  .bubble { max-width: 680px; padding: 30px 40px 32px; border-radius: 44px; font-size: 50px; line-height: 1.3; font-weight: 500; }
+  .row.r .bubble { border-top-right-radius: 14px; }
+  .row.l .bubble { border-top-left-radius: 14px; }
+  .who { display: flex; align-items: center; gap: 14px; font-size: 26px; font-weight: 400; opacity: .6; margin-bottom: 10px; }
+  .avatar { width: 34px; height: 34px; border-radius: 50%; background: rgba(255,255,255,.3); }
+  .typing { padding: 30px 38px; border-radius: 40px; display: flex; gap: 12px; }
+  .dot { width: 18px; height: 18px; border-radius: 50%; background: #fff; }
+  .chip { padding: 20px 34px; border-radius: 999px; font-size: 32px; font-weight: 500; white-space: nowrap; display: flex; gap: 16px; align-items: center; }
+
+  /* ---------- headlines ---------- */
+  .head { font-size: 132px; font-weight: 700; line-height: 1.08; text-align: center; white-space: nowrap; letter-spacing: -1px; }
+  .word { display: inline-block; }
+  .sub { font-size: 56px; font-weight: 400; color: rgba(255,255,255,.72); text-align: center; white-space: nowrap; }
+
+  /* ---------- scene 3-4: the one morphing card ---------- */
+  #card { overflow: hidden; }
+  .L { position: absolute; left: 0; top: 0; width: 0; height: 0; }
+  .lbl { font-size: 30px; color: rgba(255,255,255,.6); white-space: nowrap; }
+  .mono { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; direction: ltr; unicode-bidi: plaintext; }
+  .badge { padding: 10px 24px; border-radius: 999px; background: rgba(255,255,255,.92); color: #0b1f19; font-size: 30px; font-weight: 700; white-space: nowrap; }
+  .line { display: flex; align-items: center; gap: 18px; font-size: 38px; color: rgba(255,255,255,.82); white-space: nowrap; }
+  .waze { height: 124px; border-radius: 34px; background: #33ccff; color: #062a38; font-size: 46px; font-weight: 700;
+          display: flex; align-items: center; justify-content: center; gap: 18px; box-shadow: inset 0 2px 0 rgba(255,255,255,.55); }
+  .hl { position: absolute; height: 6px; border-radius: 3px; background: #33ccff; }
+
+  /* ---------- map ---------- */
+  #map { width: 900px; height: 1180px; border-radius: 64px; overflow: hidden; }
+  #map svg { position: absolute; left: 0; top: 0; }
+  .blockLbl { position: absolute; font-size: 28px; font-weight: 500; color: rgba(255,255,255,.55); transform: translate(-50%, -50%); }
+  .pinLbl { padding: 18px 30px; border-radius: 999px; font-size: 40px; font-weight: 700; white-space: nowrap; }
+
+  /* ---------- touch ---------- */
+  #touch { width: 96px; height: 96px; border-radius: 50%; background: rgba(255,255,255,.55); border: 3px solid rgba(255,255,255,.9);
+           box-shadow: 0 10px 30px rgba(0,0,0,.35); }
+  #ripple { width: 96px; height: 96px; border-radius: 50%; border: 4px solid rgba(255,255,255,.9); }
+
+  /* ---------- features + end ---------- */
+  .pill { width: 860px; height: 150px; border-radius: 48px; display: flex; align-items: center; gap: 30px; padding: 0 48px; box-sizing: border-box; font-size: 46px; font-weight: 500; }
+  .ico { width: 82px; height: 82px; border-radius: 26px; background: rgba(255,255,255,.16); display: flex; align-items: center; justify-content: center; flex: none; }
+  #logo { width: 220px; height: 220px; border-radius: 66px; display: flex; align-items: center; justify-content: center; }
+</style>
+</head>
+<body>
+<div id="wrap"><div id="stage">
+  <div id="bg"><div class="blob" id="b1"></div><div class="blob" id="b2"></div><div class="blob" id="b3"></div><div class="blob" id="b4"></div><div id="grid"></div></div>
+  <div id="world">
+    <!-- scene 1 -->
+    <div class="a" id="stat"><div class="glass chip" id="statChip"></div></div>
+    <div id="chat"></div>
+    <!-- scene 2 -->
+    <div class="a" id="head1"><div class="head"><span class="word">כל</span> <span class="word">סמסטר,</span><br><span class="word">אותה</span> <span class="word">שאלה.</span></div></div>
+    <!-- scene 4 map (under the card) -->
+    <div class="a" id="mapWrap"><div class="glass" id="map"><svg id="mapSvg" width="900" height="1180" viewBox="0 0 900 1180"></svg></div></div>
+    <div class="a" id="pinLbl"><div class="glass pinLbl">בניין 507</div></div>
+    <div class="a" id="pin"></div>
+    <!-- scene 3-4: one shape -->
+    <div class="a" id="cardWrap"><div class="glass" id="card">
+      <div class="L" id="Lrow">
+        <div class="a lbl" style="right:-420px; top:46px; transform:none">Inbar · מערכת שעות</div>
+        <div class="a" style="right:-420px; top:104px; font-size:44px; font-weight:500; white-space:nowrap">מבוא לסטטיסטיקה</div>
+        <div class="a line" style="right:-420px; top:176px"><span>יום ב׳ · 10:00–12:00 ·</span><span id="roomTxt" style="position:relative">מ.ישראל-507 - 102<span class="hl" id="hl" style="right:0; bottom:-14px; width:0"></span></span></div>
+      </div>
+      <div class="L" id="Lnext">
+        <div class="a lbl" style="right:-400px; top:58px">השיעור הבא</div>
+        <div class="a" id="badge" style="left:-400px; top:46px"><div class="badge">בעוד 25 דק׳</div></div>
+        <div class="a" style="right:-400px; top:118px; font-size:66px; font-weight:700; white-space:nowrap">מבוא לסטטיסטיקה</div>
+        <div class="a line" style="right:-400px; top:232px"><span id="icClock"></span><span>יום ב׳ · 10:00–12:00</span></div>
+        <div class="a line" style="right:-400px; top:302px"><span id="icPin"></span><span>בניין 507, חדר 102 · הרצאה</span></div>
+        <div class="a" id="wazeBtn" style="right:-400px; top:404px; width:800px"><div class="waze"><span id="icNav"></span>ניווט ב־Waze</div></div>
+      </div>
+    </div></div>
+    <!-- scene 5 -->
+    <div class="a" id="f1"><div class="glass pill"><div class="ico" id="i1"></div>ייבוא אוטומטי מ־Inbar</div></div>
+    <div class="a" id="f2"><div class="glass pill"><div class="ico" id="i2"></div>יומן לכל השנה, בלי ימי חג</div></div>
+    <div class="a" id="f3"><div class="glass pill"><div class="ico" id="i3"></div>37 בניינים ממופים בקמפוס</div></div>
+    <div class="a" id="f4"><div class="sub" style="display:flex; gap:18px; align-items:center"><span id="i4"></span>המערכת נשמרת רק בטלפון שלך</div></div>
+    <!-- scene 6 -->
+    <div class="a" id="logoWrap"><div class="glass" id="logo"></div></div>
+    <div class="a" id="t1"><div class="head" style="font-size:104px">אוטו-פיילוט בר-אילן</div></div>
+    <div class="a" id="t2"><div class="sub">הכיתה הבאה, בלחיצה אחת.</div></div>
+    <div class="a" id="t3"><div class="glass chip" style="font-size:38px; padding:24px 44px">הקישור בביו</div></div>
+    <!-- touch -->
+    <div class="a" id="rippleWrap"><div id="ripple"></div></div>
+    <div class="a" id="touchWrap"><div id="touch"></div></div>
+  </div>
+</div></div>
+
+<script src="engine/motion.js"></script>
+<script>
+(() => {
+const W = 1080, H = 1920, T = 24;
+const { track, ctrack, vis, apply, S, clamp, lerp, eo, eio, path } = M;
+const $ = (id) => document.getElementById(id);
+
+// Extra icons (Lucide, ISC licence) on the engine's 24-grid.
+Object.assign(M.IC, {
+  pin: ["M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0", "M12 13a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"],
+  calendar: ["M8 2v4", "M16 2v4", "M3 10h18", "M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z"],
+  download: ["M12 15V3", "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4", "m7 10 5 5 5-5"],
+  lock: ["M7 11V7a5 5 0 0 1 10 0v4", "M5 11h14a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2Z"],
+  nav: ["M3 11l19-9-9 19-2-8-8-2z"],
+  chat: ["M7.9 20A9 9 0 1 0 4 16.1L2 22Z"],
+});
+
+// ---------- sound cues (read by render.mjs) ----------
+const SFX = [];
+const cue = (t, type, gain = 1, pan = 0) => (SFX.push({ t, type, gain, pan }), t);
+
+// ---------- timeline ----------
+const BUB = [
+  { t: 0.45, side: "r", y: -560, text: "איפה הכיתה?" },
+  { t: 1.25, side: "l", y: -330, text: "באיזה בניין חבורות היום?" },
+  { t: 2.05, side: "r", y: -100, text: "איפה זה בניין 105?" },
+  { t: 2.85, side: "l", y: 200, text: "306 זה הבניין של הקופי מול שער 2, תעלו קומה וזה הכיתה הראשונה" },
+];
+const STAT = 3.65, HOOK_OUT = 4.6, HEAD_IN = 4.75, HEAD_OUT = 6.5;
+const ROW_IN = 6.7, HL = 7.55, MORPH = 8.25, BADGE = 9.05;
+const TOUCH_IN = 10.8, TAP = 11.9, SHRINK = 12.25, ROUTE0 = 12.55, ROUTE1 = 13.85, DROP = 13.9, LBL = 14.25, MAP_OUT = 15.2;
+const P = [15.55, 16.2, 16.85], LOCK = 17.8, FEAT_OUT = 19.7;
+const END = 20.0, END_T1 = 20.4, END_T2 = 20.8, END_T3 = 21.25;
+
+BUB.forEach((b, i) => cue(b.t, "pop", 0.9, b.side === "r" ? 0.25 : -0.25));
+cue(STAT, "tick", 0.6);
+cue(HOOK_OUT, "whoosh", 1, 0);
+cue(ROW_IN - 0.1, "whoosh", 0.7, 0.6);
+cue(HL, "tick", 0.7);
+cue(MORPH, "whoosh", 0.8, -0.4);
+cue(BADGE, "pop", 0.6);
+cue(TAP, "tap", 1);
+cue(SHRINK, "whoosh", 0.8, 0);
+cue(DROP, "chime", 0.9);
+cue(MAP_OUT, "whoosh", 0.8, 0);
+P.forEach((t, i) => cue(t, "pop", 0.8, [-0.3, 0, 0.3][i]));
+cue(LOCK, "tick", 0.6);
+cue(FEAT_OUT, "whoosh", 0.9, 0);
+cue(END, "chime", 1);
+window.SFX = SFX;
+
+// ---------- camera: pans out and springs back to centre on every beat ----------
+const camX = track(0, [
+  [ROW_IN - 0.15, 210, M.SOFT], [MORPH, 0, M.SOFT],         // right, then back to centre
+  [SHRINK, -60, M.SOFT], [DROP, 0, M.SOFT],
+]);
+const camY = track(-420, [
+  [BUB[1].t, -300, M.SOFT], [BUB[2].t, -120, M.SOFT], [BUB[3].t, 60, M.SOFT],   // ride down the chat
+  [STAT + 0.2, -140, M.SOFT], [HOOK_OUT, 0, M.SOFT],                             // up, back to centre
+  [SHRINK, 160, M.SOFT], [DROP, -120, M.SOFT], [MAP_OUT, 0, M.SOFT],
+  [P[0] - 0.2, 220, M.SOFT], [LOCK, 0, M.SOFT],                                  // down, back to centre
+  [END, -80, M.SOFT], [END_T3, 0, M.SOFT],
+]);
+const camZ = track(1.12, [
+  [STAT, 1.0, M.SOFT], [HEAD_IN, 1.12, M.SOFT], [HEAD_OUT, 1.0, M.SOFT],
+  [ROW_IN, 1.06, M.SOFT], [MORPH, 1.0, M.SOFT],
+  [TAP - 0.3, 1.1, M.SOFT], [SHRINK, 0.92, M.SOFT], [DROP, 1.12, M.SOFT], [MAP_OUT, 1.0, M.SOFT],
+  [END, 1.08, M.SOFT], [END_T3, 1.0, M.SOFT],
+]);
+const camR = track(0, [[ROW_IN - 0.15, -1.2, M.SOFT], [MORPH, 0, M.SOFT], [P[0] - 0.2, 0.8, M.SOFT], [LOCK, 0, M.SOFT]]);
+
+// ---------- helpers ----------
+const place = (el, x, y, s = 1, rot = 0) => {
+  el.style.transform = `translate(${x.toFixed(2)}px,${y.toFixed(2)}px) translate(-50%,-50%) scale(${s.toFixed(4)}) rotate(${rot.toFixed(3)}deg)`;
+};
+const show = (el, v, x, y, s = 1) => {
+  if (v.o < 0.002) { el.style.display = "none"; return false; }
+  el.style.display = "";
+  el.style.opacity = v.o.toFixed(4);
+  el.style.filter = v.blur > 0.05 ? `blur(${v.blur.toFixed(2)}px)` : "none";
+  place(el, x, y, s * v.s);
+  return true;
+};
+// pop: a soft spring scale-in with only a hint of overshoot
+const pop = (t, t0) => 0.72 + 0.28 * S(t - t0, 15, 0.72);
+const rise = (t, t0, d = 60) => d * (1 - S(t - t0, 12, 0.9));
+
+// ---------- build static content ----------
+const chat = $("chat");
+const bubbleEls = BUB.map((b) => {
+  const typing = document.createElement("div");
+  typing.className = "a";
+  typing.innerHTML = `<div class="row ${b.side}"><div class="glass typing"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div></div>`;
+  const msg = document.createElement("div");
+  msg.className = "a";
+  msg.innerHTML = `<div class="row ${b.side}"><div><div class="who"><span class="avatar"></span>מהקבוצה של התואר</div><div class="glass bubble">${b.text}</div></div></div>`;
+  chat.append(typing, msg);
+  return { typing, msg, dots: [...typing.querySelectorAll(".dot")] };
+});
+$("statChip").innerHTML = `${M.icon("chat", 40, "#fff", 2.2)}<span>קבוצת התואר · 5,105 הודעות</span>`;
+$("icClock").innerHTML = M.icon("clock", 40, "rgba(255,255,255,.8)", 2.2);
+$("icPin").innerHTML = M.icon("pin", 40, "rgba(255,255,255,.8)", 2.2);
+$("icNav").innerHTML = M.icon("nav", 46, "#062a38", 2.6);
+$("i1").innerHTML = M.icon("download", 44, "#fff", 2.4);
+$("i2").innerHTML = M.icon("calendar", 44, "#fff", 2.4);
+$("i3").innerHTML = M.icon("pin", 44, "#fff", 2.4);
+$("i4").innerHTML = M.icon("lock", 48, "rgba(255,255,255,.72)", 2.4);
+$("logo").innerHTML = M.icon("pin", 120, "#33ccff", 2.4);
+$("pin").innerHTML = `<svg width="120" height="150" viewBox="0 0 24 30"><path d="M12 29s9-8.4 9-16a9 9 0 0 0-18 0c0 7.6 9 16 9 16Z" fill="#33ccff" stroke="#fff" stroke-width="1.4"/><circle cx="12" cy="13" r="3.6" fill="#fff"/></svg>`;
+
+// map: stylised campus streets, building blocks and the route
+const mapSvg = $("mapSvg");
+const blocks = [[130, 210, 200, 150, "403"], [380, 170, 170, 190, "404"], [600, 150, 190, 170, "507"], [610, 420, 170, 160, "505"], [150, 520, 220, 170, "604"], [390, 640, 180, 200, "216"], [130, 860, 200, 160, "306"], [600, 760, 190, 220, "105"]];
+mapSvg.innerHTML =
+  `<g stroke="rgba(255,255,255,.14)" stroke-width="34" stroke-linecap="round" fill="none">
+     <path d="M60 400 H840"/><path d="M60 760 H840"/><path d="M60 1060 H840"/><path d="M340 60 V1120"/><path d="M570 60 V1120"/>
+   </g>` +
+  blocks.map(([x, y, w, h]) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="28" fill="rgba(255,255,255,.08)" stroke="rgba(255,255,255,.18)" stroke-width="2"/>`).join("") +
+  `<path id="route" d="M200 1060 H340 V760 H570 V400 H695 V320" fill="none" stroke="#33ccff" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>`;
+blocks.forEach(([x, y, w, h, n]) => {
+  const l = document.createElement("div");
+  l.className = "blockLbl";
+  l.style.left = x + w / 2 + "px";
+  l.style.top = y + h / 2 + "px";
+  l.textContent = n;
+  if (n === "507") l.id = "lbl507";
+  $("map").appendChild(l);
+});
+const route = $("route");
+const ROUTE_LEN = route.getTotalLength();
+route.style.strokeDasharray = ROUTE_LEN;
+// map is 900×1180 centred at world (0, 0): svg (sx, sy) -> world (sx - 450, sy - 590)
+const ROUTE_A = [200 - 450, 1060 - 590], ROUTE_B = [695 - 450, 320 - 590];
+
+// ---------- the morphing card (one shape: Inbar row -> next-class card -> "you are here" dot) ----------
+const cardW = track(860, [[MORPH, 880, M.MORPH], [SHRINK, 96, M.MORPH]]);
+const cardH = track(250, [[MORPH, 560, M.MORPH], [SHRINK, 96, M.MORPH]]);
+const cardR = track(44, [[MORPH, 56, M.MORPH], [SHRINK, 48, M.MORPH]]);
+const cardX = track(210, [[MORPH, 0, M.MORPH], [SHRINK, ROUTE_A[0], M.MORPH]]);
+const cardY = track(0, [[MORPH, 0, M.MORPH], [SHRINK, ROUTE_A[1], M.MORPH]]);
+const cardSolid = track(0, [[SHRINK, 1, [14, 1]]]);
+const press = track(0, [[TAP - 0.06, 1, [45, 1]], [TAP + 0.05, 0, [20, 0.75]]]);
+const touchPath = path([[TOUCH_IN, 300, 700], [TAP - 0.25, 40, 210], [TAP + 0.1, 40, 210], [SHRINK + 0.5, 260, 520]]);
+
+// ---------- seek ----------
+const blobs = ["b1", "b2", "b3", "b4"].map($);
+const world = $("world"), bg = $("bg");
+
+function seek(t) {
+  // background drift + parallax against the camera
+  const cx = camX(t), cy = camY(t), z = camZ(t);
+  const drift = [[0.13, 0.0, 380, 260], [0.09, 2.1, 460, 300], [0.11, 4.0, 340, 420], [0.07, 1.3, 420, 360]];
+  const base = [[200, 300], [900, 1100], [300, 1700], [1000, 500]];
+  blobs.forEach((b, i) => {
+    const [w, ph, ax, ay] = drift[i];
+    b.style.transform = `translate(${(base[i][0] + ax * Math.sin(t * w * 6.283 + ph) - cx * 0.3).toFixed(1)}px,${(base[i][1] + ay * Math.cos(t * w * 5.2 + ph) - cy * 0.3).toFixed(1)}px)`;
+  });
+  world.style.transform = `translate(${(W / 2 - cx * z).toFixed(2)}px,${(H / 2 - cy * z).toFixed(2)}px) scale(${z.toFixed(5)}) rotate(${camR(t).toFixed(3)}deg)`;
+
+  // scene 1: typing -> bubble, stacked chat
+  BUB.forEach((b, i) => {
+    const el = bubbleEls[i];
+    const tv = vis(t, b.t - 0.5, b.t, { lin: 0.18, lout: 0.08 });
+    if (show(el.typing, tv, 0, b.y + 30)) el.dots.forEach((d, k) => (d.style.opacity = (0.35 + 0.65 * (0.5 + 0.5 * Math.sin(t * 9 - k * 0.9))).toFixed(3)));
+    const bv = vis(t, b.t, HOOK_OUT, { din: 0, lin: 0.22, lout: 0.3, blur: 18 });
+    show(el.msg, bv, 0, b.y + rise(t, b.t, 40), pop(t, b.t));
+  });
+  show($("stat"), vis(t, STAT, HOOK_OUT, { lin: 0.25, lout: 0.25 }), 0, -820 + rise(t, STAT, 30), pop(t, STAT));
+
+  // scene 2: headline, word by word
+  const hv = vis(t, HEAD_IN, HEAD_OUT, { din: 0, lin: 0.01, lout: 0.3, blur: 20 });
+  if (show($("head1"), hv, 0, 0)) {
+    [...$("head1").querySelectorAll(".word")].forEach((w, k) => {
+      const v = vis(t, HEAD_IN + k * 0.16, null, { din: 0, lin: 0.32, blur: 16 });
+      w.style.opacity = v.o.toFixed(3);
+      w.style.filter = v.blur > 0.05 ? `blur(${v.blur.toFixed(2)}px)` : "none";
+      w.style.transform = `translateY(${(30 * (1 - v.a)).toFixed(2)}px)`;
+    });
+  }
+
+  // scene 3-4: one shape
+  const cw = cardW(t), ch = cardH(t), cv = vis(t, ROW_IN, MAP_OUT, { din: 0, lin: 0.3, lout: 0.3, blur: 16 });
+  const card = $("card");
+  if (show($("cardWrap"), cv, cardX(t), cardY(t), (t < ROW_IN + 0.6 ? pop(t, ROW_IN) : 1) * (1 - 0.045 * press(t)))) {
+    card.style.width = cw.toFixed(2) + "px";
+    card.style.height = ch.toFixed(2) + "px";
+    card.style.borderRadius = Math.min(cardR(t), cw / 2, ch / 2).toFixed(2) + "px";
+    const s = clamp(cardSolid(t));
+    card.style.backgroundColor = `rgba(${Math.round(lerp(255, 51, s))},${Math.round(lerp(255, 204, s))},255,${lerp(0.11, 0.96, s).toFixed(3)})`;
+    // Lrow: Inbar row
+    const rv = vis(t, ROW_IN, MORPH, { din: 0.05, lin: 0.25, lout: 0.12 });
+    if (apply($("Lrow"), rv)) {
+      $("Lrow").style.left = cw / 2 + "px";
+      const u = eio((t - HL) / 0.45);
+      $("hl").style.width = (100 * u).toFixed(2) + "%";
+      $("roomTxt").style.color = u > 0.05 ? "#9fe8ff" : "";
+    }
+    // Lnext: next-class card
+    const nv = vis(t, MORPH, SHRINK - 0.05, { din: 0.18, lin: 0.3, lout: 0.1 });
+    if (apply($("Lnext"), nv)) {
+      $("Lnext").style.left = cw / 2 + "px";
+      const bdg = $("badge");
+      const bvv = vis(t, BADGE, null, { din: 0, lin: 0.2 });
+      bdg.style.opacity = bvv.o.toFixed(3);
+      bdg.style.transform = `scale(${(BADGE <= t ? pop(t, BADGE) : 0.7).toFixed(4)})`;
+      $("wazeBtn").style.transform = `scale(${(1 - 0.06 * press(t)).toFixed(4)})`;
+    }
+  }
+
+  // map + route + pin
+  const mv = vis(t, SHRINK - 0.05, MAP_OUT, { din: 0, lin: 0.35, lout: 0.3, blur: 18 });
+  show($("mapWrap"), mv, 0, 0 + rise(t, SHRINK, 80));
+  const ru = eio((t - ROUTE0) / (ROUTE1 - ROUTE0));
+  route.style.strokeDashoffset = (ROUTE_LEN * (1 - ru)).toFixed(2);
+  const l507 = $("lbl507");
+  if (l507) l507.style.color = t > DROP ? "#9fe8ff" : "";
+  const pv = vis(t, DROP - 0.12, MAP_OUT, { din: 0, lin: 0.1, lout: 0.3 });
+  const drop = 1 - S(t - (DROP - 0.12), 16, 0.62);  // falls in from above with a small settle
+  show($("pin"), pv, ROUTE_B[0], ROUTE_B[1] - 70 - 220 * drop, 1);
+  show($("pinLbl"), vis(t, LBL, MAP_OUT, { lin: 0.25 }), ROUTE_B[0] - 40, ROUTE_B[1] - 230 + rise(t, LBL, 24), pop(t, LBL));
+
+  // touch
+  const tvv = vis(t, TOUCH_IN, SHRINK + 0.45, { din: 0, lin: 0.2, lout: 0.25 });
+  const tp = touchPath(t);
+  show($("touchWrap"), tvv, tp.x, tp.y, 1 - 0.18 * press(t));
+  const rp = clamp((t - TAP) / 0.55);
+  const rpv = { o: t >= TAP ? (1 - rp) * 0.9 : 0, blur: 0, s: 1 };
+  show($("rippleWrap"), rpv, 40, 210, 1 + 2.4 * eo(rp));
+
+  // scene 5: features
+  ["f1", "f2", "f3"].forEach((id, k) => {
+    const v = vis(t, P[k], FEAT_OUT - 0.12 * (2 - k), { din: 0, lin: 0.25, lout: 0.25, blur: 16 });
+    show($(id), v, 0, -260 + k * 190 + rise(t, P[k], 50), pop(t, P[k]));
+  });
+  show($("f4"), vis(t, LOCK, FEAT_OUT, { din: 0, lin: 0.35, lout: 0.25 }), 0, 360 + rise(t, LOCK, 30));
+
+  // scene 6: end card
+  show($("logoWrap"), vis(t, END, null, { din: 0, lin: 0.3, blur: 18 }), 0, -330, pop(t, END) * (1 + 0.02 * Math.sin((t - END) * 2.4)));
+  show($("t1"), vis(t, END_T1, null, { din: 0, lin: 0.35, blur: 18 }), 0, -60 + rise(t, END_T1, 40));
+  show($("t2"), vis(t, END_T2, null, { din: 0, lin: 0.35, blur: 14 }), 0, 70 + rise(t, END_T2, 30));
+  show($("t3"), vis(t, END_T3, null, { din: 0, lin: 0.3 }), 0, 260 + rise(t, END_T3, 30), pop(t, END_T3));
+}
+
+window.seek = seek;
+window.DURATION = T;
+const RENDER = location.search.includes("render");
+document.body.classList.add(RENDER ? "render" : "preview");
+document.fonts.ready.then(() => seek(0));
+if (!RENDER) {
+  const fit = () => { const k = Math.min(innerWidth / W, innerHeight / H); $("wrap").style.transform = `translate(-50%,-50%) scale(${k})`; };
+  fit(); addEventListener("resize", fit);
+  const t0 = performance.now();
+  const loop = () => { seek(((performance.now() - t0) / 1000) % (T + 0.5)); requestAnimationFrame(loop); };
+  requestAnimationFrame(loop);
+}
+})();
+</script>
+</body>
+</html>

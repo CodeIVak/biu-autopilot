@@ -3,3 +3,11 @@ dist/
 src/bookmarklet/dist/
 .playwright-mcp/
 *.tsbuildinfo
+
+# Private WhatsApp exports used for research only
+WhatsApp Chat*/
+*_chat.txt
+WhatsApp Chat*.zip
+
+# Rendered videos
+marketing/video/out/
