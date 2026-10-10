@@ -42,4 +42,12 @@ The app imports `src/bookmarklet/dist/bookmarklet.js?raw`, which is a build arti
 - Inbar year select `ctl00$cmbActiveYear`: `2027` = תשפ"ז. Semester filter values: `1` = A, `2` = B, `3` = summer, `5` = all.
 - Pasting a `javascript:` URL into the address bar does not work, because browsers strip the prefix. The bookmarklet must be saved as a bookmark.
 - OSM tags BIU buildings either as name "507 - ..." or as `building=university` + `addr:housenumber`. Building 505 is not in OSM.
-- `data/schedule-sample.json` holds a real student's timetable. It is gitignored; never commit it or use it as a test fixture (the fixtures in `tests/fixtures/` are synthetic).
+- Building coordinates come from two independent sources, which agree to within a few meters where both exist: OSM (`npm run update:buildings`), plus Google Maps place lookups for buildings OSM lacks, stored as `"source": "manual"`.
+
+## Privacy rules (from the developer)
+
+The repo is public. The only personal details allowed in it are the developer's public credit: **Idan Vaknin, idan.vaknin1@live.biu.ac.il** (in `src/app/config.ts`). No real student timetables (the fixtures in `tests/fixtures/` are synthetic), no Inbar screenshots or snapshots (`.playwright-mcp/` is gitignored), and no private email in commits. This repo's git config is set to the public identity.
+
+## Feedback & donations
+
+`src/app/config.ts` holds `FEEDBACK_FORM_URL` (a Google Form created by running `scripts/create-feedback-form.gs` in script.google.com; until it is set the app falls back to a mailto link) and `DONATE_URL` (Buy Me a Coffee; the button stays hidden while it is empty).

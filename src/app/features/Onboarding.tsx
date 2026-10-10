@@ -64,7 +64,7 @@ export function Onboarding({ compact = false }: { compact?: boolean }) {
         <div className="grid gap-2 sm:grid-cols-2">
           <Button onClick={copy} size="lg">
             {copied ? <Check /> : <Copy />}
-            {copied ? "הועתק!" : "העתקת קוד הסימנייה"}
+            {copied ? "הועתק" : "העתקת קוד הסימנייה"}
           </Button>
           <Button asChild variant="outline" size="lg">
             <a href={LOGIN_URL} target="_blank" rel="noreferrer">
@@ -81,7 +81,7 @@ export function Onboarding({ compact = false }: { compact?: boolean }) {
             className="text-foreground font-medium underline"
             onClick={(e) => e.preventDefault()}
           >
-            ⭐ אוטו-פיילוט
+            אוטו-פיילוט
           </a>
         </p>
       </CardContent>

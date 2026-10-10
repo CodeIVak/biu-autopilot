@@ -1,0 +1,15 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  // Static-only deployment (Workers Static Assets): no Worker script, no backend, no bindings.
+  "name": "biu-autopilot",
+  "compatibility_date": "2026-10-11",
+  "assets": {
+    "directory": "./dist",
+    // The app is a single page; unknown paths fall back to index.html.
+    "not_found_handling": "single-page-application"
+  },
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1
+  }
+}

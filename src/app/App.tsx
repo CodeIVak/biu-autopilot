@@ -7,6 +7,7 @@ import { currentSemester, nextOccurrence } from "@/core/schedule/occurrences";
 import type { Weekday } from "@/core/types";
 import { Button } from "@/app/components/ui/button";
 import { Card, CardContent } from "@/app/components/ui/card";
+import { About } from "@/app/features/About";
 import { CalendarExport } from "@/app/features/CalendarExport";
 import { NextClass } from "@/app/features/NextClass";
 import { Onboarding } from "@/app/features/Onboarding";
@@ -42,7 +43,7 @@ export default function App() {
       </header>
 
       {importError && <Notice tone="error">{importError}</Notice>}
-      {justImported && <Notice>✓ מערכת השעות עודכנה מ-Inbar</Notice>}
+      {justImported && <Notice>מערכת השעות עודכנה מ-Inbar.</Notice>}
 
       {!payload ? (
         <Onboarding />
@@ -81,6 +82,7 @@ export default function App() {
           </details>
         </>
       )}
+      <About />
     </main>
   );
 }

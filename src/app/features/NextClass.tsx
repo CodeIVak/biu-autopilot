@@ -13,7 +13,7 @@ export function NextClass({ next, now, navApp }: { next: Occurrence | null; now:
   if (!next) {
     return (
       <Card>
-        <CardContent className="text-muted-foreground py-8 text-center">אין שיעורים קרובים בסמסטר הזה 🎉</CardContent>
+        <CardContent className="text-muted-foreground py-8 text-center">אין שיעורים קרובים בסמסטר הנוכחי.</CardContent>
       </Card>
     );
   }
