@@ -41,11 +41,79 @@ function findTable(root: ParentNode): HTMLTableElement | null {
   );
 }
 
-/** Parses the StudentPeriodSchedule page (live document or a fetched/parsed one). */
+/**
+ * Parses the StudentPeriodSchedule page (live document or a fetched/parsed one). Inbar renders
+ * either a GridView table or "cards" (a per-user setting that is the default on phones).
+ */
 export function parseSchedule(root: ParentNode): Lesson[] {
   const table = findTable(root);
-  if (!table) throw new Error("טבלת מערכת השעות לא נמצאה בעמוד");
+  if (table) return parseTable(table);
+  if (root.querySelector(CARD_SELECTOR)) return parseCards(root);
+  throw new Error("מערכת השעות לא נמצאה בעמוד");
+}
 
+function lesson(fields: {
+  day: string;
+  time: string;
+  course: string;
+  code: string;
+  period: string;
+  lecturer: string;
+  room: string;
+  type: string;
+}): Lesson | null {
+  const weekday = WEEKDAYS[fields.day];
+  const [start, end] = fields.time.split("-").map((s) => s.trim());
+  if (weekday === undefined || !start || !end) return null;
+  return {
+    weekday,
+    start,
+    end,
+    course: fields.course,
+    code: fields.code,
+    semesters: parsePeriod(fields.period),
+    lecturer: fields.lecturer,
+    ...parseRoom(fields.room),
+    roomRaw: fields.room,
+    type: fields.type,
+  };
+}
+
+const CARD_SELECTOR = ".RepeaterCard";
+const TIME_RANGE = /^\d{1,2}:\d{2}\s*-\s*\d{1,2}:\d{2}$/;
+
+/**
+ * Card view: `.RepeaterCard` > `.TitleRepeaterField .RepeaterField` (course name), then
+ * `.LineRepeaterField .RepeaterField` items of `<span>label</span> value`. Cards label the time
+ * "שעות" (the table uses "שעה"), so the time is taken from whichever field looks like HH:MM-HH:MM.
+ */
+function parseCards(root: ParentNode): Lesson[] {
+  const lessons: Lesson[] = [];
+  for (const card of Array.from(root.querySelectorAll(CARD_SELECTOR))) {
+    const course = card.querySelector(".TitleRepeaterField > .RepeaterField")?.textContent?.trim() ?? "";
+    const fields = new Map<string, string>();
+    for (const field of Array.from(card.querySelectorAll(".LineRepeaterField .RepeaterField"))) {
+      const label = field.querySelector("span")?.textContent?.trim() ?? "";
+      const value = (field.textContent ?? "").trim().slice(label.length).trim();
+      if (label) fields.set(label, value);
+    }
+    const time = [...fields.values()].find((v) => TIME_RANGE.test(v)) ?? "";
+    const parsed = lesson({
+      day: fields.get(HEADERS.day) ?? "",
+      time,
+      course,
+      code: fields.get(HEADERS.code) ?? "",
+      period: fields.get(HEADERS.period) ?? "",
+      lecturer: fields.get(HEADERS.lecturer) ?? "",
+      room: fields.get(HEADERS.room) ?? "",
+      type: fields.get(HEADERS.type) ?? "",
+    });
+    if (parsed) lessons.push(parsed);
+  }
+  return lessons;
+}
+
+function parseTable(table: HTMLTableElement): Lesson[] {
   const header = Array.from(table.rows[0].cells).map((c) => c.textContent?.trim() ?? "");
   const col = Object.fromEntries(
     Object.entries(HEADERS).map(([key, title]) => [key, header.indexOf(title)]),
@@ -57,22 +125,17 @@ export function parseSchedule(root: ParentNode): Lesson[] {
   const lessons: Lesson[] = [];
   for (const row of Array.from(table.rows).slice(1)) {
     const cell = (i: number) => (i >= 0 ? (row.cells[i]?.textContent?.trim() ?? "") : "");
-    const weekday = WEEKDAYS[cell(col.day)];
-    const [start, end] = cell(col.time).split("-").map((s) => s.trim());
-    if (weekday === undefined || !start || !end) continue;
-    const roomRaw = cell(col.room);
-    lessons.push({
-      weekday,
-      start,
-      end,
+    const parsed = lesson({
+      day: cell(col.day),
+      time: cell(col.time),
       course: cell(col.course),
       code: cell(col.code),
-      semesters: parsePeriod(cell(col.period)),
+      period: cell(col.period),
       lecturer: cell(col.lecturer),
-      ...parseRoom(roomRaw),
-      roomRaw,
+      room: cell(col.room),
       type: cell(col.type),
     });
+    if (parsed) lessons.push(parsed);
   }
   return lessons;
 }

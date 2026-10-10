@@ -79,7 +79,7 @@ function lessonEvent(lesson: Lesson, sem: SemesterKey, year: AcademicYear, opts:
   const coords = buildingCoordinates(lesson.building);
   const place = placeLabel(lesson);
   const description = [
-    `${lesson.type}${lesson.lecturer ? ` · ${lesson.lecturer}` : ""}`,
+    [lesson.type, lesson.lecturer].filter(Boolean).join(" · "),
     `${place}`,
     `ניווט: ${url}`,
   ].join("\n");

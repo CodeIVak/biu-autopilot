@@ -43,7 +43,7 @@ export function WeekView({ lessons, today, navApp }: { lessons: Lesson[]; today:
                     <div className="min-w-0 flex-1">
                       <p className="truncate font-medium">{l.course}</p>
                       <p className="text-muted-foreground truncate text-sm">
-                        {placeLabel(l)} · {l.type}
+                        {[placeLabel(l), l.type].filter(Boolean).join(" · ")}
                       </p>
                     </div>
                     <Button asChild size="icon" variant="ghost" aria-label="ניווט">

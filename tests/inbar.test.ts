@@ -44,6 +44,27 @@ describe("parseSchedule", () => {
     expect(lessons[1]).toMatchObject({ weekday: 1, building: "404", semesters: ["B"] });
     expect(lessons[2]).toMatchObject({ weekday: 3, building: null, roomRaw: "מקוון", semesters: ["A", "B"] });
   });
+  it("parses the card view that Inbar shows on phones", () => {
+    const cards = readFileSync(path.resolve("tests/fixtures/student-period-schedule-cards.html"), "utf8");
+    const lessons = parseSchedule(new DOMParser().parseFromString(cards, "text/html"));
+    expect(lessons).toEqual([
+      {
+        weekday: 0,
+        start: "10:00",
+        end: "12:00",
+        course: "מבוא לדוגמה",
+        code: "11111-01",
+        semesters: ["A"],
+        lecturer: 'ד"ר ישראלי',
+        area: "יהדות",
+        building: "404",
+        room: "102",
+        roomRaw: "יהדות-404 - 102",
+        type: "",
+      },
+      expect.objectContaining({ weekday: 5, start: "08:00", course: "עיבוד, ניתוח והצגת נתונים לדוגמה", semesters: ["B"], building: "507" }),
+    ]);
+  });
   it("throws when the table is missing", () => {
     expect(() => parseSchedule(new DOMParser().parseFromString("<p>login</p>", "text/html"))).toThrow();
   });

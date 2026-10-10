@@ -38,7 +38,7 @@ export function NextClass({ next, now, navApp }: { next: Occurrence | null; now:
           </p>
           <p className="flex items-center gap-2">
             <MapPin className="size-4" />
-            {placeLabel(lesson)} · {lesson.type}
+            {[placeLabel(lesson), lesson.type].filter(Boolean).join(" · ")}
           </p>
         </div>
         <Button asChild size="lg" className="bg-waze text-waze-foreground hover:bg-waze/90 h-14 w-full text-lg">
