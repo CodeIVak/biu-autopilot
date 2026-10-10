@@ -1,0 +1,7 @@
+node_modules/
+dist/
+src/bookmarklet/dist/
+.playwright-mcp/
+# Real personal timetable data captured during research
+data/schedule-sample.json
+*.tsbuildinfo
