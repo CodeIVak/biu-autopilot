@@ -40,6 +40,7 @@ The app imports `src/bookmarklet/dist/bookmarklet.js?raw`, which is a build arti
 ## Facts verified against live systems (2026-10)
 
 - Inbar year select `ctl00$cmbActiveYear`: `2027` = תשפ"ז. Semester filter values: `1` = A, `2` = B, `3` = summer, `5` = all.
+- Inbar has two timetable layouts, chosen by a per-user server-side preference (`#btnCardsView` / `#btnGridView`). Phones default to **cards** (`.RepeaterCard`: title `.TitleRepeaterField > .RepeaterField`, fields `.LineRepeaterField .RepeaterField` = `<span>label</span> value`, time labelled "שעות", no "סוג מפגש"). `parseSchedule` must keep supporting both.
 - Pasting a `javascript:` URL into the address bar does not work, because browsers strip the prefix. The bookmarklet must be saved as a bookmark.
 - OSM tags BIU buildings either as name "507 - ..." or as `building=university` + `addr:housenumber`. Building 505 is not in OSM.
 - Building coordinates come from two independent sources, which agree to within a few meters where both exist: OSM (`npm run update:buildings`), plus Google Maps place lookups for buildings OSM lacks, stored as `"source": "manual"`.
