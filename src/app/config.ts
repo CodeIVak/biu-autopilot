@@ -10,6 +10,12 @@ export const DEVELOPER = {
 /** Google Form created by scripts/create-feedback-form.gs ("Published" responder link). */
 export const FEEDBACK_FORM_URL = "";
 
+/**
+ * iCloud link of the "אוטו-פיילוט" iOS shortcut (see docs/GUIDE.md, "קיצור iOS"). When set,
+ * iPhone users get a one-tap install instead of editing a bookmark.
+ */
+export const IOS_SHORTCUT_URL = "";
+
 /** e.g. "https://buymeacoffee.com/<username>". */
 export const DONATE_URL = "";
 

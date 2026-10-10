@@ -1,8 +1,11 @@
 import { fetchSchedule, INBAR_ORIGIN, LOGIN_URL, NotLoggedInError } from "@/core/inbar/fetchSchedule";
 import { encodePayload, HASH_KEY } from "@/core/transfer/codec";
 
-// Replaced with the app's own URL when the app renders the bookmarklet link.
-const APP_URL = "__APP_URL__";
+// When loaded by the short loader bookmarklet, the app URL is wherever this script is hosted
+// (<app>/bookmarklet.js). When inlined as a full javascript: URL (local http dev), the app
+// replaces the placeholder instead. currentScript is only set during synchronous execution.
+const hostedAt = (document.currentScript as HTMLScriptElement | null)?.src;
+const APP_URL = hostedAt ? new URL(".", hostedAt).href : "__APP_URL__";
 
 function toast(text: string): HTMLDivElement {
   const el = document.createElement("div");
