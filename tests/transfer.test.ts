@@ -27,7 +27,7 @@ describe("navigationUrl", () => {
     expect(navigationUrl("507", "gmaps")).toBe(`https://www.google.com/maps/dir/?api=1&destination=${c.lat},${c.lng}`);
   });
   it("has every building on campus", () => {
-    for (const b of ["403", "404", "507", "604"]) {
+    for (const b of ["403", "404", "505", "507", "604"]) {
       const c = buildingCoordinates(b)!;
       expect(c.lat).toBeGreaterThan(32.06);
       expect(c.lat).toBeLessThan(32.08);

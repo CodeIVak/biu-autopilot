@@ -110,7 +110,7 @@ src/app/           ממשק React + shadcn/ui (components/ui נוצרו ב-shadc
 
 ### קואורדינטות של בניינים
 
-`src/core/navigation/buildings.json` נוצר מ-OpenStreetMap עם `npm run update:buildings`. כרגע יש בו 31 בניינים בקמפוס. נבחרים רק בניינים ששמם מתחיל במספר בניין, או שמסומנים `building=university`. הקואורדינטה היא מרכז קווי המתאר של הבניין. הקישורים פותחים ניווט מהמיקום הנוכחי של הטלפון (`navigate=yes` ב-Waze, `dir` ב-Google Maps).
+`src/core/navigation/buildings.json` נוצר מ-OpenStreetMap עם `npm run update:buildings`. כרגע יש בו 37 בניינים בקמפוס (31 מ-OSM, ו-6 שאומתו ידנית מול Google Maps ומסומנים "manual"). נבחרים רק בניינים ששמם מתחיל במספר בניין, או שמסומנים `building=university`. הקואורדינטה היא מרכז קווי המתאר של הבניין. הקישורים פותחים ניווט מהמיקום הנוכחי של הטלפון (`navigate=yes` ב-Waze, `dir` ב-Google Maps).
 
 בניין שחסר, למשל **505** שלא מסומן ב-OSM, מוסיפים ידנית עם `"source": "manual"`. רשומות ידניות לא נדרסות בעדכון הבא:
 
